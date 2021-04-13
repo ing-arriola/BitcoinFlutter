@@ -3,13 +3,39 @@ import 'coin_data.dart';
 import 'package:flutter/cupertino.dart';
 import 'dart:io' show Platform;
 
+const url =
+    'https://rest.coinapi.io/v1/exchangerate/BTC/USD?apikey=F7C9184A-4978-4527-9044-E10F917BDA9C';
+
 class PriceScreen extends StatefulWidget {
   @override
   _PriceScreenState createState() => _PriceScreenState();
 }
 
 class _PriceScreenState extends State<PriceScreen> {
+  double temp;
+  var value;
   String labelDropdown = 'USD';
+  @override
+  void initState() {
+    super.initState();
+    getDataCoin();
+  }
+
+  getDataCoin() async {
+    CoinData monedita = CoinData(
+        'https://rest.coinapi.io/v1/exchangerate/BTC/$labelDropdown?apikey=F7C9184A-4978-4527-9044-E10F917BDA9C');
+    var info = await monedita.getCoinData();
+
+    print(info['rate']);
+    temp = info['rate'];
+    setState(() {
+      if (temp is double) {
+        value = info['rate'].toInt();
+      } else {
+        value = info['rate'];
+      }
+    });
+  }
 
   DropdownButton<String> androidDropDown() {
     return DropdownButton<String>(
@@ -19,6 +45,7 @@ class _PriceScreenState extends State<PriceScreen> {
         setState(() {
           labelDropdown = value;
         });
+        getDataCoin();
       },
     );
   }
@@ -54,6 +81,14 @@ class _PriceScreenState extends State<PriceScreen> {
     return items;
   }
 
+  Widget getSelector() {
+    if (Platform.isIOS) {
+      return iOSPicker();
+    } else if (Platform.isAndroid) {
+      return androidDropDown();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -75,7 +110,7 @@ class _PriceScreenState extends State<PriceScreen> {
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 28.0),
                 child: Text(
-                  '1 BTC = ? USD',
+                  '1 BTC = $value USD',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 20.0,
@@ -90,7 +125,7 @@ class _PriceScreenState extends State<PriceScreen> {
             alignment: Alignment.center,
             padding: EdgeInsets.only(bottom: 30.0),
             color: Colors.lightBlue,
-            child: iOSPicker(),
+            child: getSelector(),
           ),
         ],
       ),
