@@ -67,7 +67,10 @@ class _PriceScreenState extends State<PriceScreen> {
     return CupertinoPicker(
       itemExtent: 32,
       onSelectedItemChanged: (value) {
-        print(value);
+        setState(() {
+          labelDropdown = currenciesList[value];
+          getDataCoin();
+        });
       },
       children: getPickerValues(),
     );
