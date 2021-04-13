@@ -3,9 +3,6 @@ import 'coin_data.dart';
 import 'package:flutter/cupertino.dart';
 import 'dart:io' show Platform;
 
-const url =
-    'https://rest.coinapi.io/v1/exchangerate/BTC/USD?apikey=F7C9184A-4978-4527-9044-E10F917BDA9C';
-
 class PriceScreen extends StatefulWidget {
   @override
   _PriceScreenState createState() => _PriceScreenState();
@@ -13,7 +10,7 @@ class PriceScreen extends StatefulWidget {
 
 class _PriceScreenState extends State<PriceScreen> {
   double temp;
-  var value;
+  List <dynamic> values = [0,0,0];
   String labelDropdown = 'USD';
   @override
   void initState() {
@@ -21,20 +18,23 @@ class _PriceScreenState extends State<PriceScreen> {
     getDataCoin();
   }
 
+  bool isWaiting = false;
   getDataCoin() async {
-    CoinData monedita = CoinData(
-        'https://rest.coinapi.io/v1/exchangerate/BTC/$labelDropdown?apikey=F7C9184A-4978-4527-9044-E10F917BDA9C');
-    var info = await monedita.getCoinData();
-
-    print(info['rate']);
-    temp = info['rate'];
-    setState(() {
-      if (temp is double) {
-        value = info['rate'].toInt();
-      } else {
-        value = info['rate'];
-      }
-    });
+    isWaiting = true;
+      for( var i=0; i<cryptoList.length; i++){
+      CoinData monedita = CoinData(
+          'https://rest.coinapi.io/v1/exchangerate/${cryptoList[i]}/$labelDropdown?apikey=F7C9184A-4978-4527-9044-E10F917BDA9C');
+      var info = await monedita.getCoinData();
+      temp = info['rate'];
+      setState(() {
+        if (temp is double) {
+          values[i]=(info['rate'].toInt());
+        } else {
+          values[i]=(info['rate']);
+        }
+      });
+    }
+    isWaiting = false;
   }
 
   DropdownButton<String> androidDropDown() {
@@ -89,16 +89,10 @@ class _PriceScreenState extends State<PriceScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('🤑 Coin Ticker'),
-      ),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: <Widget>[
+  List <Widget>  results(){
+    List <Widget> outcome=[];
+    for( var j=0; j<cryptoList.length; j++){
+      outcome.add(
           Padding(
             padding: EdgeInsets.fromLTRB(18.0, 18.0, 18.0, 0),
             child: Card(
@@ -110,7 +104,7 @@ class _PriceScreenState extends State<PriceScreen> {
               child: Padding(
                 padding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 28.0),
                 child: Text(
-                  '1 BTC = $value USD',
+                  '1 ${cryptoList[j]} = ${isWaiting ? '?' : '${values[j]} $labelDropdown'}',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 20.0,
@@ -119,9 +113,28 @@ class _PriceScreenState extends State<PriceScreen> {
                 ),
               ),
             ),
+          )
+      );
+    }
+    return outcome;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('🤑 Coin Ticker'),
+      ),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: <Widget>[
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: results(),
           ),
           Container(
-            height: 150.0,
+            height: 120.0,
             alignment: Alignment.center,
             padding: EdgeInsets.only(bottom: 30.0),
             color: Colors.lightBlue,
